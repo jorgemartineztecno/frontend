@@ -1,0 +1,88 @@
+:root {
+  --primary-blue: #1a237e;
+  --secondary-blue: #3949ab;
+  --accent-blue: #2fa1ff;
+  --light-bg: #f4f7fb;
+  --white: #fff;
+  --gray: #545b67;
+  --border-radius: 14px;
+  --shadow: 0 8px 32px rgba(30, 41, 59, 0.14);
+  --error: #d64045;
+  --success: #2ecc71;
+}
+
+.page-container {
+background: var(--white);
+  border-radius: var(--border-radius);
+  box-shadow: var(--shadow);
+  max-width: 800px;
+  padding: 8px 28px;
+  display: flex;
+  flex-direction: column;
+}
+
+.page-header {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+}
+
+.payment-controls {
+  display: flex;
+  flex-wrap: wrap;
+  background-color: #ddd;
+  padding: 10 20 0;
+  border-radius: 10px;
+}
+.date-range-info p{
+  color: var(--accent-blue)
+}
+
+.form-dates {
+  display: flex;
+  flex-direction: row;
+  min-width: 200px;
+  gap: 8px;
+} 
+
+.calc-button {
+  padding-top: 0.2rem;
+}
+
+.form-group label {
+  margin-bottom: 5px;
+  font-weight: 500;
+}
+
+.form-group select,
+.form-group input {
+  padding: 8px;
+  border: 1px solid #ddd;
+  border-radius: 4px;
+}
+
+button {
+  padding: 8px 16px;
+  background-color: #4caf50;
+  color: white;
+  border: none;
+  border-radius: 4px;
+  cursor: pointer;
+  height: 36px;
+}
+
+button:disabled {
+  background-color: #cccccc;
+  cursor: not-allowed;
+}
+
+.react-datepicker-wrapper {
+  width: auto;
+}
+
+.date-range-info {
+  display: flex;
+  flex-direction: row;
+  gap: 16px;
+  color:aliceblue
+}

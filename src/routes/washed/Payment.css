@@ -1,0 +1,125 @@
+:root {
+  --primary-blue: #1a237e;
+  --secondary-blue: #3949ab;
+  --accent-blue: #2fa1ff;
+  --light-bg: #f4f7fb;
+  --white: #fff;
+  --gray: #545b67;
+  --border-radius: 14px;
+  --shadow: 0 8px 32px rgba(30, 41, 59, 0.14);
+  --error: #d64045;
+  --success: #2ecc71;
+}
+
+.payment-card {
+  background: var(--white);
+  border-radius: var(--border-radius);
+  box-shadow: var(--shadow);
+  max-width: 600px;
+  margin: 0px auto 24px auto;
+  padding: 0px 28px;
+  display: flex;
+  flex-direction: column;
+  gap: 8;
+}
+
+.payment-card h2 {
+  color: var(--primary-blue);
+  font-size: 1.5rem;
+  font-weight: 700;
+  margin-bottom: 10px;
+  text-align: center;
+  position: relative;
+  padding-bottom: 0.5rem;
+}
+
+.payment-card h2::after {
+  content: '';
+  position: absolute;
+  bottom: 0;
+  left: 30%;
+  width: 40%;
+  height: 3px;
+  background: linear-gradient(135deg, #6e8efb, #a777e3);
+  border-radius: 3px;
+}
+
+.payment-card form {
+  width: 100%;
+  display: flex;
+  flex-direction: column;
+  gap: 14px;
+}
+
+.form-group {
+  display: flex;
+  flex-direction: column;
+  gap: 5px;
+}
+
+label {
+  font-size: 1rem;
+  color: var(--secondary-blue);
+  font-weight: 500;
+}
+
+input, select, textarea {
+  padding: 11px 13px;
+  border: 1.5px solid #cfd8dc;
+  border-radius: 7px;
+  font-size: 1rem;
+  background: var(--light-bg);
+  transition: border-color 0.2s, box-shadow 0.2s;
+}
+
+input:focus, select:focus, textarea:focus {
+  border-color: var(--secondary-blue);
+  background: #fff;
+  box-shadow: 0 0 0 2px rgba(57,73,171,0.10);
+  outline: none;
+}
+
+button, .form-button {
+  background: var(--secondary-blue);
+  color: var(--white);
+  border: none;
+  border-radius: 7px;
+  font-weight: 600;
+  font-size: 1.08rem;
+  padding: 12px;
+  margin-top: 10px;
+  cursor: pointer;
+  transition: background 0.2s, transform 0.2s;
+}
+
+button:hover, .form-button:hover {
+  background: var(--primary-blue);
+  transform: translateY(-2px);
+}
+
+.error, .error-message {
+  color: var(--error);
+  background: #fdebec;
+  border-radius: 6px;
+  padding: 10px;
+  margin-bottom: 8px;
+  text-align: center;
+  font-weight: 500;
+}
+
+.success {
+  color: var(--success);
+  background: #eafaf1;
+  border-radius: 6px;
+  padding: 10px;
+  margin-bottom: 8px;
+  text-align: center;
+  font-weight: 500;
+}
+
+@media (max-width: 768px) {
+  .payment-card {
+    padding: 18px 7px;
+    margin: 20px 4px;
+  }
+}

@@ -1,0 +1,173 @@
+/* Contenedor principal del formulario */
+.form-container {
+    margin: 2rem auto;
+    width: 500px;
+    padding: 2rem;
+    background: white;
+    border-radius: 10px;
+    box-shadow: 0 4px 12px rgba(0, 0, 0, 0.08);
+}
+
+/* Título del formulario */
+.form-container h3 {
+    margin-top: 0;
+    margin-bottom: 1.5rem;
+    color: #2c3e50;
+    font-size: 1.5rem;
+    text-align: center;
+    position: relative;
+    padding-bottom: 0.5rem;
+}
+
+.form-container h3::after {
+    content: '';
+    position: absolute;
+    bottom: 0;
+    height: 3px;
+    background: linear-gradient(135deg, #6e8efb, #a777e3);
+    border-radius: 3px;
+}
+
+/* Grupos de campos del formulario */
+.form-group {
+    margin-bottom: 1.5rem;
+    position: relative;
+}
+
+.form-group label {
+    display: block;
+    margin-bottom: 0.5rem;
+    color: #2c3e50;
+    font-weight: 500;
+    font-size: 0.95rem;
+}
+
+/* Campos de entrada */
+.form-group input {
+    width: 90%;
+    padding: 0.8rem 1rem 0.8rem 2.5rem;
+    border: 1px solid #ddd;
+    border-radius: 8px;
+    font-size: 0.95rem;
+    transition: all 0.3s ease;
+    background-color: #f9f9f9;
+}
+
+.form-group input:focus {
+    border-color: #6e8efb;
+    outline: none;
+    box-shadow: 0 0 0 3px rgba(110, 142, 251, 0.2);
+    background-color: white;
+}
+
+/* Iconos para campos */
+.form-group::before {
+    font-family: 'Font Awesome 5 Free';
+    font-weight: 900;
+    position: absolute;
+    left: 1rem;
+    top: 2.3rem;
+    color: #777;
+    font-size: 1rem;
+}
+
+/* Iconos específicos para cada tipo de campo */
+.form-group[data-field="name"]::before {
+    content: '\f007';
+    /* user icon */
+}
+
+.form-group[data-field="email"]::before {
+    content: '\f0e0';
+    /* envelope icon */
+}
+
+.form-group[data-field="password"]::before {
+    content: '\f023';
+    /* lock icon */
+}
+
+.form-group[data-field="phone"]::before {
+    content: '\f095';
+    /* phone icon */
+}
+
+/* Botón de envío */
+.form-submit-button {
+    width: 100%;
+    padding: 0.8rem;
+    background: linear-gradient(135deg, #6e8efb, #a777e3);
+    color: white;
+    border: none;
+    border-radius: 8px;
+    font-size: 1rem;
+    font-weight: 500;
+    cursor: pointer;
+    transition: all 0.3s ease;
+    margin-top: 0.5rem;
+}
+
+.form-submit-button:hover {
+    background: linear-gradient(135deg, #5e7eea, #9667d3);
+    transform: translateY(-2px);
+    box-shadow: 0 4px 8px rgba(110, 142, 251, 0.3);
+}
+
+.form-submit-button:active {
+    transform: translateY(0);
+}
+
+/* Mensajes de estado */
+.form-error {
+    background-color: #ffebee;
+    color: #c62828;
+    padding: 0.8rem 1rem;
+    border-radius: 8px;
+    margin-bottom: 1.5rem;
+    font-size: 0.9rem;
+    border-left: 4px solid #c62828;
+}
+
+.form-success {
+    background-color: #e8f5e9;
+    color: #2e7d32;
+    padding: 0.8rem 1rem;
+    border-radius: 8px;
+    margin-bottom: 1.5rem;
+    font-size: 0.9rem;
+    border-left: 4px solid #2e7d32;
+}
+
+/* Diseño responsive */
+@media (max-width: 768px) {
+    .form-container {
+        padding: 1.5rem;
+        margin: 1rem;
+    }
+
+    .form-group input {
+        padding: 0.7rem 1rem 0.7rem 2.2rem;
+    }
+
+    .form-group::before {
+        top: 2rem;
+        left: 0.8rem;
+    }
+}
+
+/* Animaciones */
+@keyframes fadeIn {
+    from {
+        opacity: 0;
+        transform: translateY(10px);
+    }
+
+    to {
+        opacity: 1;
+        transform: translateY(0);
+    }
+}
+
+.form-container {
+    animation: fadeIn 0.4s ease-out forwards;
+}

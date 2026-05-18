@@ -1,0 +1,29 @@
+.footer {
+  background: #111;
+  padding: 12px 0;
+  text-align: center;
+  border-top: 1px solid #00b4d8;
+  width: 100%;
+  flex-shrink: 0;
+}
+
+.footer-icons {
+  display: flex;
+  justify-content: center;
+  gap: 25px;
+  margin-bottom: 5px;
+}
+
+.footer-icon {
+  font-size: 1.4rem;
+  transition: transform 0.3s;
+}
+
+.footer-icon:hover {
+  transform: scale(1.15);
+}
+
+.footer-copyright {
+  font-size: 0.7rem;
+  color: #777;
+}

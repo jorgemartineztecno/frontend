@@ -1,0 +1,31 @@
+{
+  "name": "front",
+  "private": true,
+  "version": "1.0.0",
+  "scripts": {
+    "dev": "rsbuild dev --open",
+    "build": "rsbuild build",
+    "preview": "rsbuild preview",
+    "start": "rsbuild preview"
+  },
+  "dependencies": {
+    "@rsbuild/plugin-node-polyfill": "^1.2.0",
+    "@types/react-datepicker": "^7.0.0",
+    "axios": "^1.7.7",
+    "file-saver": "^2.0.5",
+    "react": "^18.3.1",
+    "react-datepicker": "^8.3.0",
+    "react-dom": "^18.3.1",
+    "react-icons": "^5.5.0",
+    "recharts": "^3.8.1",
+    "xlsx": "^0.18.5"
+  },
+  "devDependencies": {
+    "@rsbuild/core": "^1.0.13",
+    "@rsbuild/plugin-react": "^1.0.3",
+    "autoprefixer": "^10.4.21",
+    "postcss": "^8.5.3",
+    "react-router-dom": "^6.27.0",
+    "tailwindcss": "^4.1.4"
+  }
+}
