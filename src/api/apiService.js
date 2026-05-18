@@ -122,6 +122,8 @@ export const apiService = {
       method: "POST",
       body: JSON.stringify(data),
     }),
+  getPlanDia: (diaSemana) =>
+    fetchWithAuth(`/api/dia/${diaSemana}`, { method: "GET" }),
   getPredictionHistory: () =>
     fetchWithAuth("/api/historial", { method: "GET" }),
 
