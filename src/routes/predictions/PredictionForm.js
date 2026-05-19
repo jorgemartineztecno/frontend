@@ -13,18 +13,25 @@ const todayIndex = () => {
 const DEMAND_COLOR = { Alto: '#43a047', Medio: '#fb8c00', Bajo: '#e53935' };
 const DEMAND_ICON  = { Alto: '🔥', Medio: '📈', Bajo: '📉' };
 
+const fmt = (n) => Math.round(n).toLocaleString('es-CO');
+
 const PredictionForm = () => {
   const [selectedDay, setSelectedDay] = useState(todayIndex());
   const [plan, setPlan]               = useState(null);
+  const [opt,  setOpt]                = useState(null);
   const [loading, setLoading]         = useState(false);
+  const [loadingOpt, setLoadingOpt]   = useState(false);
   const [error, setError]             = useState(null);
+  const [showOpt, setShowOpt]         = useState(false);
 
   const fetchPlan = useCallback(async (dayIdx) => {
     setLoading(true);
     setError(null);
     setPlan(null);
+    setOpt(null);
+    setShowOpt(false);
     try {
-      const dia = DAYS[dayIdx];
+      const dia  = DAYS[dayIdx];
       const data = await apiService.getPlanDia(dia);
       if (data?.error) throw new Error(data.error);
       setPlan(data);
@@ -32,6 +39,21 @@ const PredictionForm = () => {
       setError(err.message || 'Error al obtener el plan');
     } finally {
       setLoading(false);
+    }
+  }, []);
+
+  const fetchOpt = useCallback(async (dayIdx) => {
+    setLoadingOpt(true);
+    try {
+      const dia  = DAYS[dayIdx];
+      const data = await apiService.getOptimizacion(dia);
+      if (data?.error) throw new Error(data.error);
+      setOpt(data);
+      setShowOpt(true);
+    } catch (err) {
+      setError(err.message || 'Error al optimizar');
+    } finally {
+      setLoadingOpt(false);
     }
   }, []);
 
@@ -210,6 +232,106 @@ const PredictionForm = () => {
               ))}
             </div>
           </div>
+
+          {/* ── Botón optimizar ── */}
+          {!showOpt && (
+            <div className="opt-trigger">
+              <button
+                className="opt-btn"
+                onClick={() => fetchOpt(selectedDay)}
+                disabled={loadingOpt}
+              >
+                {loadingOpt
+                  ? <><span className="loading-spinner" /> Calculando optimización…</>
+                  : '💡 Maximizar ingresos con IO'}
+              </button>
+              <p className="opt-hint">
+                Programación Lineal: calcula el mix de servicios que maximiza tus ingresos
+                dado la capacidad real de empleados y demanda predicha.
+              </p>
+            </div>
+          )}
+
+          {/* ── Panel de optimización ── */}
+          {showOpt && opt && (
+            <div className="opt-panel">
+              <div className="opt-panel-header">
+                <h3>Optimización de Ingresos — {DAYS[selectedDay]}</h3>
+                <button className="opt-close" onClick={() => setShowOpt(false)}>✕</button>
+              </div>
+
+              {/* KPIs de optimización */}
+              <div className="opt-kpis">
+                <div className="opt-kpi opt-kpi--green">
+                  <p className="opt-kpi-label">Ingreso óptimo total</p>
+                  <p className="opt-kpi-value">${fmt(opt.total_optimo)}</p>
+                </div>
+                <div className="opt-kpi opt-kpi--gray">
+                  <p className="opt-kpi-label">Sin optimizar</p>
+                  <p className="opt-kpi-value">${fmt(opt.total_promedio)}</p>
+                </div>
+                <div className="opt-kpi opt-kpi--blue">
+                  <p className="opt-kpi-label">Ganancia adicional</p>
+                  <p className="opt-kpi-value">+${fmt(opt.ganancia_adicional)}</p>
+                </div>
+                <div className="opt-kpi opt-kpi--orange">
+                  <p className="opt-kpi-label">Mejora estimada</p>
+                  <p className="opt-kpi-value">+{opt.pct_mejora}%</p>
+                </div>
+              </div>
+
+              {/* Servicios y popularidad */}
+              {opt.servicios && opt.servicios.length > 0 && (
+                <div className="opt-services">
+                  <h4>Servicios en el modelo</h4>
+                  <div className="opt-svc-list">
+                    {opt.servicios.map((s) => (
+                      <div key={s.name} className="opt-svc-item">
+                        <span className="opt-svc-name">{s.name}</span>
+                        <span className="opt-svc-price">${fmt(s.price)}</span>
+                        <div className="opt-svc-bar-wrap">
+                          <div
+                            className="opt-svc-bar"
+                            style={{ width: `${Math.min(100, s.popularity)}%` }}
+                          />
+                        </div>
+                        <span className="opt-svc-pop">{s.popularity}% demanda</span>
+                      </div>
+                    ))}
+                  </div>
+                </div>
+              )}
+
+              {/* Mix por hora */}
+              <div className="opt-hours">
+                <h4>Mix óptimo por franja horaria</h4>
+                <div className="opt-hour-table">
+                  <div className="oht-header">
+                    <span>Hora</span>
+                    <span>Mix recomendado</span>
+                    <span>Ingreso óptimo</span>
+                    <span>Sin optimizar</span>
+                    <span>Capacidad</span>
+                  </div>
+                  {opt.horas && opt.horas.map((h) => (
+                    <div key={h.hora} className="oht-row">
+                      <span className="oht-hora">{h.hora}:00</span>
+                      <span className="oht-mix">
+                        {Object.entries(h.mix_optimo || {}).map(([svc, qty]) => (
+                          <span key={svc} className="mix-tag">
+                            {svc} ×{qty}
+                          </span>
+                        ))}
+                      </span>
+                      <span className="oht-opt">${fmt(h.ingreso_optimo)}</span>
+                      <span className="oht-avg">${fmt(h.ingreso_promedio)}</span>
+                      <span className="oht-cap">{h.capacidad_usada}%</span>
+                    </div>
+                  ))}
+                </div>
+              </div>
+            </div>
+          )}
         </>
       )}
     </div>
