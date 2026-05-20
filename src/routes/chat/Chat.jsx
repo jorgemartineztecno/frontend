@@ -29,35 +29,8 @@ const Chat = () => {
     setLoading(true);
 
     try {
-      // const data = await apiService.sendChatMessage(text);
-      // setMessages((prev) => [...prev, { role: 'assistant', text: data.response }]);
-      const xaiApiKey = process.env.RSBUILD_XAI_API_KEY;
-      if (!xaiApiKey) {
-        setMessages((prev) => [...prev, { role: 'assistant', text: '⚠️ API key for X.ai is not configured.' }]);
-        setLoading(false);
-        return;
-      }
-
-      const response = await fetch("https://api.x.ai/v1/responses", {
-        method: "POST",
-        headers: {
-          "Content-Type": "application/json",
-          "Authorization": `Bearer ${xaiApiKey}`,
-        },
-        body: JSON.stringify({
-          model: "grok-4.20-reasoning",
-          input: text,
-        }),
-      });
-
-      if (!response.ok) {
-        const errorData = await response.json();
-        throw new Error(errorData.error.message || "Error from X.ai API");
-      }
-
-      const data = await response.json();
-      const assistantMessage = data.response || "No se recibió respuesta.";
-      setMessages((prev) => [...prev, { role: 'assistant', text: assistantMessage }]);
+      const data = await apiService.sendChatMessage(text);
+      setMessages((prev) => [...prev, { role: 'assistant', text: data.response }]);
     } catch (err) {
       let errorMsg = 'Lo siento, ocurrió un error al conectar con el asistente.';
       try {
@@ -81,7 +54,7 @@ const Chat = () => {
               <div className="chat-avatar-sm">SF</div>
               <div>
                 <p className="chat-popup-name">Asistente San Felipe</p>
-                <span className="chat-popup-status">● En línea · Gemini AI</span>
+                <span className="chat-popup-status">● En línea · Grok AI</span>
               </div>
             </div>
             <button className="chat-close-btn" onClick={() => setOpen(false)}>✕</button>
