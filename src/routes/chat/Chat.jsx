@@ -29,8 +29,37 @@ const Chat = () => {
     setLoading(true);
 
     try {
-      const data = await apiService.sendChatMessage(text);
-      setMessages((prev) => [...prev, { role: 'assistant', text: data.response }]);
+      // const data = await apiService.sendChatMessage(text);
+      // setMessages((prev) => [...prev, { role: 'assistant', text: data.response }]);
+      const groqApiKey = process.env.RSBUILD_GROQ_API_KEY;
+      if (!groqApiKey) {
+        throw new Error("API key for Groq is not configured.");
+      }
+
+      const response = await fetch("https://api.groq.com/openai/v1/chat/completions", {
+        method: "POST",
+        headers: {
+          "Content-Type": "application/json",
+          "Authorization": `Bearer ${groqApiKey}`,
+        },
+        body: JSON.stringify({
+          model: "llama3-8b-8192",
+          messages: [
+            { role: "system", content: "Eres un asistente amable y servicial para un negocio de lavado de autos llamado San Felipe." },
+            ...messages.slice(1), // Exclude initial message
+            { role: "user", content: text },
+          ],
+        }),
+      });
+
+      if (!response.ok) {
+        const errorData = await response.json();
+        throw new Error(errorData.error.message || "Error from Groq API");
+      }
+
+      const data = await response.json();
+      const assistantMessage = data.choices[0]?.message?.content || "No se recibió respuesta.";
+      setMessages((prev) => [...prev, { role: 'assistant', text: assistantMessage }]);
     } catch (err) {
       let errorMsg = 'Lo siento, ocurrió un error al conectar con el asistente.';
       try {
