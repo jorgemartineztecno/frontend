@@ -44,6 +44,9 @@ const NavBar = () => {
           <Link to="/predictions" className="nav-link">
             <i className="fas fa-chart-line"></i> Predicción del Día
           </Link>
+          <Link to="/optimization" className="nav-link">
+            <i className="fas fa-flask"></i> Optimización
+          </Link>
         </div>
 
         {/* Menú de registros */}

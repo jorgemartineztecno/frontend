@@ -19,6 +19,7 @@ import EmployeePayments from "./Employee/EmployeePayments";
 import PredictionForm from "./predictions/PredictionForm";
 import PredictionHistory from "./predictions/PredictionHistory";
 import Chat from "./chat/Chat";
+import Optimization from "./optimization/Optimization";
 
 const createProtectedElement = (Component) => (
   <ProtectedRoute>
@@ -63,6 +64,7 @@ const PrivateRoutes = [
     element: createProtectedElement(PredictionHistory),
   },
   { path: "/chat", element: createProtectedElement(Chat) },
+  { path: "/optimization", element: createProtectedElement(Optimization) },
 ];
 
 export default PrivateRoutes;
