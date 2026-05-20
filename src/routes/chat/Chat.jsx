@@ -31,34 +31,32 @@ const Chat = () => {
     try {
       // const data = await apiService.sendChatMessage(text);
       // setMessages((prev) => [...prev, { role: 'assistant', text: data.response }]);
-      const groqApiKey = process.env.RSBUILD_GROQ_API_KEY;
-      if (!groqApiKey) {
-        throw new Error("API key for Groq is not configured.");
+      const xaiApiKey = process.env.RSBUILD_XAI_API_KEY;
+      if (!xaiApiKey) {
+        setMessages((prev) => [...prev, { role: 'assistant', text: '⚠️ API key for X.ai is not configured.' }]);
+        setLoading(false);
+        return;
       }
 
-      const response = await fetch("https://api.groq.com/openai/v1/chat/completions", {
+      const response = await fetch("https://api.x.ai/v1/responses", {
         method: "POST",
         headers: {
           "Content-Type": "application/json",
-          "Authorization": `Bearer ${groqApiKey}`,
+          "Authorization": `Bearer ${xaiApiKey}`,
         },
         body: JSON.stringify({
-          model: "llama3-8b-8192",
-          messages: [
-            { role: "system", content: "Eres un asistente amable y servicial para un negocio de lavado de autos llamado San Felipe." },
-            ...messages.slice(1), // Exclude initial message
-            { role: "user", content: text },
-          ],
+          model: "grok-4.20-reasoning",
+          input: text,
         }),
       });
 
       if (!response.ok) {
         const errorData = await response.json();
-        throw new Error(errorData.error.message || "Error from Groq API");
+        throw new Error(errorData.error.message || "Error from X.ai API");
       }
 
       const data = await response.json();
-      const assistantMessage = data.choices[0]?.message?.content || "No se recibió respuesta.";
+      const assistantMessage = data.response || "No se recibió respuesta.";
       setMessages((prev) => [...prev, { role: 'assistant', text: assistantMessage }]);
     } catch (err) {
       let errorMsg = 'Lo siento, ocurrió un error al conectar con el asistente.';
