@@ -13,7 +13,7 @@ const PowerBIPage = () => {
         <div className="pbi-header-left">
           <span className="pbi-icon">📊</span>
           <div>
-            <h2>Dashboard Power BI</h2>
+            <h2>Dashboard de Reportes</h2>
             <p>Reportes y analítica avanzada del negocio en tiempo real</p>
           </div>
         </div>
