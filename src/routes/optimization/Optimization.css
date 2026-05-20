@@ -392,6 +392,50 @@
 .qt-orange { color: #fb8c00; font-weight: 700; }
 .qt-red    { color: #e53935; font-weight: 700; }
 
+/* ── Service time cards ── */
+.svc-time-grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fill, minmax(180px, 1fr));
+  gap: 0.75rem;
+  margin-top: 0.5rem;
+}
+
+.svc-time-card {
+  background: #f0fdfa;
+  border: 1px solid #b2dfdb;
+  border-radius: 12px;
+  padding: 1rem 1.1rem;
+}
+
+.stc-row {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  margin: 4px 0;
+}
+
+.stc-label {
+  font-size: 0.75rem;
+  color: #64748b;
+}
+
+.stc-val {
+  font-size: 0.82rem;
+  font-weight: 700;
+}
+
+.stc-gray   { color: #475569; }
+.stc-blue   { color: #0288d1; }
+.stc-green  { color: #00897b; }
+.stc-orange { color: #fb8c00; }
+
+.stc-bar-fill {
+  height: 100%;
+  background: linear-gradient(90deg, #00897b, #43a047);
+  border-radius: 99px;
+  transition: width 0.6s ease-out;
+}
+
 @keyframes fadeUp {
   from { opacity: 0; transform: translateY(12px); }
   to   { opacity: 1; transform: translateY(0); }
@@ -405,4 +449,5 @@
   .hot-avg, .hot-cap { display: none; }
   .qt-header, .qt-row { grid-template-columns: 1.4fr 0.6fr 0.9fr; }
   .qt-emp, .qt-row span:nth-child(6) { display: none; }
+  .svc-time-grid { grid-template-columns: repeat(2, 1fr); }
 }

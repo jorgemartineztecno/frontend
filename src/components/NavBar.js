@@ -47,6 +47,9 @@ const NavBar = () => {
           <Link to="/optimization" className="nav-link">
             <i className="fas fa-flask"></i> Optimización
           </Link>
+          <Link to="/powerbi" className="nav-link">
+            <i className="fas fa-chart-bar"></i> Power BI
+          </Link>
         </div>
 
         {/* Menú de registros */}

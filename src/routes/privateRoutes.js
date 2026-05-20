@@ -20,6 +20,7 @@ import PredictionForm from "./predictions/PredictionForm";
 import PredictionHistory from "./predictions/PredictionHistory";
 import Chat from "./chat/Chat";
 import Optimization from "./optimization/Optimization";
+import PowerBIPage from "./powerbi/PowerBIPage";
 
 const createProtectedElement = (Component) => (
   <ProtectedRoute>
@@ -65,6 +66,7 @@ const PrivateRoutes = [
   },
   { path: "/chat", element: createProtectedElement(Chat) },
   { path: "/optimization", element: createProtectedElement(Optimization) },
+  { path: "/powerbi", element: createProtectedElement(PowerBIPage) },
 ];
 
 export default PrivateRoutes;
