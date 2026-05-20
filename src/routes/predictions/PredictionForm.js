@@ -23,6 +23,9 @@ const PredictionForm = () => {
   const [loadingOpt, setLoadingOpt]   = useState(false);
   const [error, setError]             = useState(null);
   const [showOpt, setShowOpt]         = useState(false);
+  const [tiempos, setTiempos]         = useState(null);
+  const [loadingTiempos, setLoadingTiempos] = useState(false);
+  const [showTiempos, setShowTiempos] = useState(false);
 
   const fetchPlan = useCallback(async (dayIdx) => {
     setLoading(true);
@@ -30,6 +33,8 @@ const PredictionForm = () => {
     setPlan(null);
     setOpt(null);
     setShowOpt(false);
+    setTiempos(null);
+    setShowTiempos(false);
     try {
       const dia  = DAYS[dayIdx];
       const data = await apiService.getPlanDia(dia);
@@ -60,6 +65,20 @@ const PredictionForm = () => {
   useEffect(() => {
     fetchPlan(selectedDay);
   }, [selectedDay, fetchPlan]);
+
+  const fetchTiempos = useCallback(async (dayIdx) => {
+    setLoadingTiempos(true);
+    try {
+      const data = await apiService.getOptimizacionTiempos(DAYS[dayIdx]);
+      if (data?.error) throw new Error(data.error);
+      setTiempos(data);
+      setShowTiempos(true);
+    } catch (err) {
+      setError(err.message || 'Error al calcular tiempos');
+    } finally {
+      setLoadingTiempos(false);
+    }
+  }, []);
 
   const handleDay = (idx) => setSelectedDay(idx);
 
@@ -330,6 +349,91 @@ const PredictionForm = () => {
                   ))}
                 </div>
               </div>
+            </div>
+          )}
+          {/* ── Botón tiempos ── */}
+          {!showTiempos && (
+            <div className="opt-trigger">
+              <button
+                className="opt-btn opt-btn--teal"
+                onClick={() => fetchTiempos(selectedDay)}
+                disabled={loadingTiempos}
+              >
+                {loadingTiempos
+                  ? <><span className="loading-spinner" /> Calculando…</>
+                  : '⏱ Optimizar tiempos de espera (M/M/c + SPT)'}
+              </button>
+              <p className="opt-hint">
+                Teoría de colas M/M/c: calcula el tiempo de espera por servicio según empleados disponibles.
+                SPT ordena los servicios para minimizar la espera promedio del cliente.
+              </p>
+            </div>
+          )}
+
+          {/* ── Panel tiempos ── */}
+          {showTiempos && tiempos && (
+            <div className="opt-panel opt-panel--teal">
+              <div className="opt-panel-header">
+                <h3>Optimización de Tiempos — {DAYS[selectedDay]}</h3>
+                <button className="opt-close" onClick={() => setShowTiempos(false)}>✕</button>
+              </div>
+
+              {/* Orden SPT */}
+              {tiempos.spt && (
+                <div className="spt-section">
+                  <h4>Orden óptimo de atención (SPT)</h4>
+                  <p className="spt-desc">{tiempos.spt.descripcion}</p>
+                  <div className="spt-list">
+                    {tiempos.spt.orden && tiempos.spt.orden.map((s, i) => (
+                      <div key={s.nombre} className="spt-item">
+                        <span className="spt-rank">#{i + 1}</span>
+                        <span className="spt-name">{s.nombre}</span>
+                        <span className="spt-dur">{s.duracion_min} min</span>
+                        <span className="spt-price">${fmt(s.precio)}</span>
+                      </div>
+                    ))}
+                  </div>
+                </div>
+              )}
+
+              {/* Tabla por hora — mostrar hora pico */}
+              <h4 style={{ marginTop: '1.2rem', fontSize: '0.85rem', color: '#475569', textTransform: 'uppercase', letterSpacing: '0.4px' }}>
+                Análisis por franja horaria
+              </h4>
+              {tiempos.horas && tiempos.horas
+                .filter(h => h.demanda > 0)
+                .map(h => (
+                  <div key={h.hora} className="tq-hora-block">
+                    <div className="tq-hora-title">
+                      <span className="tq-hora-label">{h.hora}:00</span>
+                      <span className="tq-demanda">{h.demanda} autos/h esperados</span>
+                    </div>
+                    <div className="tq-svc-table">
+                      <div className="tq-header">
+                        <span>Servicio</span>
+                        <span>Duración</span>
+                        <span>Espera actual</span>
+                        <span>Emp. óptimos</span>
+                        <span>Espera óptima</span>
+                        <span>Throughput</span>
+                      </div>
+                      {h.servicios && h.servicios.map(s => (
+                        <div key={s.servicio} className={`tq-row${s.espera_actual_min > 15 ? ' tq-warn' : ''}`}>
+                          <span className="tq-svc">{s.servicio}</span>
+                          <span>{s.duracion_min} min</span>
+                          <span className={s.espera_actual_min > 15 ? 'tq-red' : s.espera_actual_min > 5 ? 'tq-orange' : 'tq-green'}>
+                            {s.espera_actual_min >= 999 ? '∞' : `${s.espera_actual_min} min`}
+                          </span>
+                          <span className="tq-emp">{s.empleados_optimo} emp</span>
+                          <span className="tq-green">
+                            {s.espera_optima_min >= 999 ? '∞' : `${s.espera_optima_min} min`}
+                          </span>
+                          <span>{s.throughput_hora}/h</span>
+                        </div>
+                      ))}
+                    </div>
+                  </div>
+                ))}
             </div>
           )}
         </>

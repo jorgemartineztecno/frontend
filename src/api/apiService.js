@@ -126,6 +126,8 @@ export const apiService = {
     fetchWithAuth(`/api/dia/${diaSemana}`, { method: "GET" }),
   getOptimizacion: (diaSemana) =>
     fetchWithAuth(`/api/optimizar/${diaSemana}`, { method: "GET" }),
+  getOptimizacionTiempos: (diaSemana) =>
+    fetchWithAuth(`/api/optimizar/tiempos/${diaSemana}`, { method: "GET" }),
   getPredictionHistory: () =>
     fetchWithAuth("/api/historial", { method: "GET" }),
 
