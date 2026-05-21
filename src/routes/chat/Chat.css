@@ -237,3 +237,43 @@
   background: #c5d8f7;
   cursor: not-allowed;
 }
+
+/* Sugerencias */
+.chat-suggestions {
+  display: flex;
+  flex-direction: column;
+  gap: 6px;
+  margin-top: 4px;
+}
+
+.chat-suggestion-btn {
+  background: #fff;
+  border: 1px solid #1a73e8;
+  color: #1a73e8;
+  border-radius: 16px;
+  padding: 6px 12px;
+  font-size: 12px;
+  cursor: pointer;
+  text-align: left;
+  transition: background 0.15s, color 0.15s;
+}
+
+.chat-suggestion-btn:hover {
+  background: #1a73e8;
+  color: #fff;
+}
+
+/* Typing con texto de estado */
+.typing-wrap {
+  display: flex;
+  flex-direction: column;
+  gap: 4px;
+  background: #fff !important;
+  padding: 8px 12px !important;
+}
+
+.chat-loading-text {
+  font-size: 11px;
+  color: #888;
+  font-style: italic;
+}

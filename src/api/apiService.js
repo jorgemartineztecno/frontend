@@ -132,10 +132,10 @@ export const apiService = {
     fetchWithAuth("/api/historial", { method: "GET" }),
 
   // Chat
-  sendChatMessage: (message) =>
+  sendChatMessage: (message, history = [], sessionId = null) =>
     fetchWithAuth("/chat/message", {
       method: "POST",
-      body: JSON.stringify({ message }),
+      body: JSON.stringify({ message, history, sessionId }),
     }),
 
   // Registros de pago

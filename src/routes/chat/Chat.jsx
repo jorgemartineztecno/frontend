@@ -2,13 +2,25 @@ import React, { useState, useRef, useEffect } from 'react';
 import { apiService } from '../../api/apiService';
 import './Chat.css';
 
+const INITIAL_MESSAGE = {
+  role: 'assistant',
+  text: '¡Hola! Soy el asistente de San Felipe. Puedo consultar y registrar información en el sistema. ¿En qué te ayudo?',
+};
+
+const SUGGESTIONS = [
+  '¿Qué clientes están registrados?',
+  'Registra un nuevo cliente',
+  '¿Qué servicios ofrecemos?',
+  'Registra un lavado',
+];
+
 const Chat = () => {
   const [open, setOpen] = useState(false);
-  const [messages, setMessages] = useState([
-    { role: 'assistant', text: '¡Hola! Soy el asistente de San Felipe. ¿En qué te ayudo?' },
-  ]);
+  const [messages, setMessages] = useState([INITIAL_MESSAGE]);
   const [input, setInput] = useState('');
   const [loading, setLoading] = useState(false);
+  const [loadingText, setLoadingText] = useState('Pensando...');
+  const [sessionId, setSessionId] = useState(null);
   const bottomRef = useRef(null);
   const inputRef = useRef(null);
 
@@ -19,17 +31,29 @@ const Chat = () => {
     }
   }, [open, messages]);
 
-  const handleSend = async (e) => {
-    e.preventDefault();
-    const text = input.trim();
-    if (!text || loading) return;
+  const send = async (text) => {
+    if (!text.trim() || loading) return;
 
-    setMessages((prev) => [...prev, { role: 'user', text }]);
+    const updatedMessages = [...messages, { role: 'user', text }];
+    setMessages(updatedMessages);
     setInput('');
     setLoading(true);
+    setLoadingText('Pensando...');
+
+    // Simular progreso visual mientras el agente consulta herramientas
+    const timer = setTimeout(() => setLoadingText('Consultando base de datos...'), 1500);
 
     try {
-      const data = await apiService.sendChatMessage(text);
+      const history = updatedMessages
+        .slice(1)       // omitir mensaje de bienvenida
+        .slice(0, -1)   // omitir el mensaje actual
+        .map((m) => ({
+          role: m.role === 'assistant' ? 'assistant' : 'user',
+          content: m.text,
+        }));
+
+      const data = await apiService.sendChatMessage(text, history, sessionId);
+      if (data.sessionId && !sessionId) setSessionId(data.sessionId);
       setMessages((prev) => [...prev, { role: 'assistant', text: data.response }]);
     } catch (err) {
       let errorMsg = 'Lo siento, ocurrió un error al conectar con el asistente.';
@@ -41,9 +65,25 @@ const Chat = () => {
       }
       setMessages((prev) => [...prev, { role: 'assistant', text: '⚠️ ' + errorMsg }]);
     } finally {
+      clearTimeout(timer);
       setLoading(false);
     }
   };
+
+  const handleSend = (e) => {
+    e.preventDefault();
+    send(input.trim());
+  };
+
+  const handleSuggestion = (text) => send(text);
+
+  const handleClear = () => {
+    setMessages([INITIAL_MESSAGE]);
+    setInput('');
+    setSessionId(null);
+  };
+
+  const showSuggestions = messages.length === 1 && !loading;
 
   return (
     <div className="chat-widget">
@@ -57,7 +97,10 @@ const Chat = () => {
                 <span className="chat-popup-status">● En línea · Grok AI</span>
               </div>
             </div>
-            <button className="chat-close-btn" onClick={() => setOpen(false)}>✕</button>
+            <div style={{ display: 'flex', gap: '6px' }}>
+              <button className="chat-close-btn" onClick={handleClear} title="Nueva conversación">↺</button>
+              <button className="chat-close-btn" onClick={() => setOpen(false)}>✕</button>
+            </div>
           </div>
 
           <div className="chat-popup-messages">
@@ -67,11 +110,25 @@ const Chat = () => {
                 <div className="chat-msg-bubble">{msg.text}</div>
               </div>
             ))}
+
+            {showSuggestions && (
+              <div className="chat-suggestions">
+                {SUGGESTIONS.map((s, i) => (
+                  <button key={i} className="chat-suggestion-btn" onClick={() => handleSuggestion(s)}>
+                    {s}
+                  </button>
+                ))}
+              </div>
+            )}
+
             {loading && (
               <div className="chat-msg assistant">
                 <div className="chat-avatar-xs">SF</div>
-                <div className="chat-msg-bubble typing">
-                  <span /><span /><span />
+                <div className="chat-msg-bubble typing-wrap">
+                  <div className="chat-msg-bubble typing">
+                    <span /><span /><span />
+                  </div>
+                  <span className="chat-loading-text">{loadingText}</span>
                 </div>
               </div>
             )}
