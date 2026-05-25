@@ -17,22 +17,52 @@ const DataTable = ({
   onDelete,
   onEdit,
   pageSize = 8,
+  searchPlaceholder = 'Buscar...',
 }) => {
   const [page, setPage] = useState(1);
+  const [query, setQuery] = useState('');
 
   useEffect(() => {
     setPage(1);
-  }, [data.length]);
+  }, [data.length, query]);
 
-  const totalPages = Math.max(1, Math.ceil(data.length / pageSize));
+  const filtered = query.trim()
+    ? data.filter((row) =>
+        Object.values(row).some((val) =>
+          String(val ?? '').toLowerCase().includes(query.toLowerCase())
+        )
+      )
+    : data;
+
+  const totalPages = Math.max(1, Math.ceil(filtered.length / pageSize));
   const safePage = Math.min(page, totalPages);
   const start = (safePage - 1) * pageSize;
-  const pageData = data.slice(start, start + pageSize);
+  const pageData = filtered.slice(start, start + pageSize);
   const pageRange = getPageRange(safePage, totalPages);
   const hasActions = onDelete || onEdit;
 
   return (
     <div className="dt-wrapper">
+      {/* ── Barra de búsqueda ── */}
+      <div className="dt-search-bar">
+        <svg className="dt-search-icon" width="16" height="16" viewBox="0 0 24 24"
+          fill="none" stroke="currentColor" strokeWidth="2.2">
+          <circle cx="11" cy="11" r="8"/><line x1="21" y1="21" x2="16.65" y2="16.65"/>
+        </svg>
+        <input
+          type="text"
+          className="dt-search-input"
+          placeholder={searchPlaceholder}
+          value={query}
+          onChange={(e) => setQuery(e.target.value)}
+        />
+        {query && (
+          <button className="dt-search-clear" onClick={() => setQuery('')} title="Limpiar">
+            ✕
+          </button>
+        )}
+      </div>
+
       <div className="data-table-container">
         <table className="data-table">
           <thead>
@@ -90,9 +120,11 @@ const DataTable = ({
       {data.length > 0 && (
         <div className="dt-footer">
           <span className="dt-info">
-            {data.length === 0
-              ? 'Sin resultados'
-              : `Mostrando ${start + 1}–${Math.min(start + pageSize, data.length)} de ${data.length} registros`}
+            {filtered.length === 0
+              ? `Sin resultados para "${query}"`
+              : query
+                ? `${filtered.length} resultado${filtered.length !== 1 ? 's' : ''} · mostrando ${start + 1}–${Math.min(start + pageSize, filtered.length)}`
+                : `Mostrando ${start + 1}–${Math.min(start + pageSize, filtered.length)} de ${filtered.length} registros`}
           </span>
 
           {totalPages > 1 && (
