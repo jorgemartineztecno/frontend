@@ -51,6 +51,33 @@ const computeTiemposKPIs = (tiempos) => {
   return { avgActual, avgOptima, reduccion, totalEmpleados, services: Object.values(serviceMap) };
 };
 
+const HELP_CONTENT = {
+  ingresos: {
+    title: 'Maximización de Ingresos — Programación Lineal',
+    intro: 'El modelo calcula cuántos lavados de cada servicio conviene hacer en cada hora para ganar la mayor cantidad de dinero posible, sin sobrepasar la capacidad del negocio.',
+    columns: [
+      { label: 'HORA', desc: 'Franja horaria del día (7:00 a 18:00).' },
+      { label: 'MIX RECOMENDADO', desc: 'Combinación óptima de servicios que el modelo sugiere realizar en esa hora. El número (×0.3) indica cuántas unidades de ese servicio.' },
+      { label: 'ÓPTIMO', desc: 'Ingreso máximo posible si se sigue el mix recomendado. Es el resultado de la optimización.' },
+      { label: 'PROMEDIO', desc: 'Ingreso esperado sin optimizar, distribuyendo los clientes proporcionalmente según la popularidad histórica de cada servicio.' },
+      { label: 'CAP.', desc: 'Capacidad usada: qué tan aprovechada está la capacidad de los empleados en esa hora. 100% = empleados al máximo. Valores altos son buenos si los ingresos también son altos.' },
+    ],
+    note: 'Si ÓPTIMO y PROMEDIO son iguales, significa que la distribución actual ya es óptima para esa hora, o que se necesitan más datos históricos de lavados para diferenciarlas.',
+  },
+  tiempos: {
+    title: 'Optimización de Tiempos — M/M/c + SPT',
+    intro: 'Este modelo busca reducir el tiempo que espera cada cliente antes de ser atendido, calculando cuántos empleados se necesitan y en qué orden atender los servicios.',
+    columns: [
+      { label: 'ESPERA ACTUAL', desc: 'Tiempo promedio que espera un cliente en la fila con la configuración actual de empleados.' },
+      { label: 'EMP. ÓPTIMOS', desc: 'Número de empleados recomendado para que la espera no supere los 10 minutos.' },
+      { label: 'ESPERA ÓPTIMA', desc: 'Tiempo de espera estimado si se usa el número óptimo de empleados.' },
+      { label: 'THROUGHPUT', desc: 'Cuántos autos puede atender ese servicio por hora con los empleados asignados.' },
+      { label: 'ORDEN SPT', desc: 'Orden sugerido de atención: primero los servicios más cortos (Shortest Processing Time) para reducir la espera promedio de todos los clientes.' },
+    ],
+    note: 'Si la espera muestra ∞ (infinito), significa que la demanda supera la capacidad — se necesitan más empleados urgentemente en esa franja.',
+  },
+};
+
 const Optimization = () => {
   const [selectedDay, setSelectedDay] = useState(todayIndex());
   const [activeTab, setActiveTab]     = useState('ingresos');
@@ -60,6 +87,7 @@ const Optimization = () => {
   const [loadingOpt,   setLoadingOpt]   = useState(false);
   const [loadingTiempos, setLoadingTiempos] = useState(false);
   const [error,        setError]        = useState(null);
+  const [showHelp,     setShowHelp]     = useState(false);
 
   const fetchOpt = useCallback(async (dayIdx) => {
     setLoadingOpt(true); setError(null); setOpt(null);
@@ -162,6 +190,14 @@ const Optimization = () => {
           {(loadingOpt || loadingTiempos)
             ? <><span className="loading-spinner" /> Calculando…</>
             : `Optimizar ${DAYS[selectedDay]}`}
+        </button>
+        <button className="help-btn" onClick={() => setShowHelp(true)}>
+          <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5">
+            <circle cx="12" cy="12" r="10"/>
+            <path d="M9.09 9a3 3 0 0 1 5.83 1c0 2-3 3-3 3"/>
+            <line x1="12" y1="17" x2="12.01" y2="17"/>
+          </svg>
+          ¿Cómo funciona?
         </button>
       </div>
 
@@ -370,6 +406,28 @@ const Optimization = () => {
           </div>
         );
       })()}
+      {showHelp && (
+        <>
+          <div className="help-overlay" onClick={() => setShowHelp(false)} />
+          <div className="help-panel">
+            <div className="help-panel-header">
+              <p className="help-panel-title">{HELP_CONTENT[activeTab].title}</p>
+              <button className="help-close-btn" onClick={() => setShowHelp(false)}>✕</button>
+            </div>
+            <p className="help-intro">{HELP_CONTENT[activeTab].intro}</p>
+            <p className="help-cols-title">Significado de columnas</p>
+            {HELP_CONTENT[activeTab].columns.map(col => (
+              <div key={col.label} className="help-col-item">
+                <span className="help-col-label">{col.label}</span>
+                <p className="help-col-desc">{col.desc}</p>
+              </div>
+            ))}
+            <div className="help-note">
+              <p>{HELP_CONTENT[activeTab].note}</p>
+            </div>
+          </div>
+        </>
+      )}
     </div>
   );
 };
