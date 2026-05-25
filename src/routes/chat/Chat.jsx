@@ -4,14 +4,14 @@ import './Chat.css';
 
 const INITIAL_MESSAGE = {
   role: 'assistant',
-  text: '¡Hola! Soy tu asistente. Puedo consultar clientes, servicios, empleados y registrar lavados. ¿En qué te ayudo?',
+  text: '¡Hola! Soy tu asistente con acceso completo a la base de datos. Puedo consultar, registrar, actualizar y eliminar clientes, empleados, servicios y autos. También genero reportes del negocio. ¿En qué te ayudo?',
 };
 
 const SUGGESTIONS = [
-  '¿Cuáles son nuestros servicios?',
-  'Muéstrame los clientes registrados',
+  'Genera un reporte del negocio',
   'Registra un nuevo cliente',
-  '¿Cuántos lavados hay esta semana?',
+  'Actualiza el precio de un servicio',
+  'Elimina un cliente por nombre',
 ];
 
 // Renderizador simple de markdown para el chat
