@@ -51,6 +51,28 @@ const computeTiemposKPIs = (tiempos) => {
   return { avgActual, avgOptima, reduccion, totalEmpleados, services: Object.values(serviceMap) };
 };
 
+const computeRecommendations = (opt) => {
+  if (!opt?.horas) return null;
+
+  const improved = opt.horas
+    .filter(h => h.ingreso_optimo > h.ingreso_promedio + 50)
+    .sort((a, b) => (b.ingreso_optimo - b.ingreso_promedio) - (a.ingreso_optimo - a.ingreso_promedio));
+
+  const svcCount = {};
+  opt.horas.forEach(h => {
+    Object.entries(h.mix_optimo || {}).forEach(([s]) => {
+      svcCount[s] = (svcCount[s] || 0) + 1;
+    });
+  });
+  const topSvcName = Object.entries(svcCount).sort((a, b) => b[1] - a[1])[0]?.[0];
+  const topSvcInfo = opt.servicios?.find(s => s.name === topSvcName);
+  const topSvc = topSvcName ? { name: topSvcName, price: topSvcInfo?.price, hours: svcCount[topSvcName] } : null;
+
+  const bottlenecks = opt.horas.filter(h => h.capacidad_usada >= 100 && h.ingreso_optimo > 0);
+
+  return { improved, topSvc, bestHour: improved[0] ?? null, bottlenecks };
+};
+
 const HELP_CONTENT = {
   ingresos: {
     title: 'Maximización de Ingresos — Programación Lineal',
@@ -225,6 +247,59 @@ const Optimization = () => {
               <p className="kpi-value">+{opt.pct_mejora}%</p>
             </div>
           </div>
+
+          {/* Recomendaciones */}
+          {(() => {
+            const rec = computeRecommendations(opt);
+            if (!rec) return null;
+            return (
+              <div className="rec-panel">
+                <p className="rec-panel-title">¿Qué hacer hoy?</p>
+                <div className="rec-grid">
+                  {rec.topSvc && (
+                    <div className="rec-card rec-card--blue">
+                      <p className="rec-card-label">Servicio a priorizar</p>
+                      <p className="rec-card-value">{rec.topSvc.name}</p>
+                      <p className="rec-card-hint">
+                        {rec.topSvc.price ? `$${fmt(rec.topSvc.price)} · ` : ''}
+                        recomendado en {rec.topSvc.hours} franja{rec.topSvc.hours !== 1 ? 's' : ''}
+                      </p>
+                    </div>
+                  )}
+                  {rec.bestHour ? (
+                    <div className="rec-card rec-card--green">
+                      <p className="rec-card-label">Mejor franja horaria</p>
+                      <p className="rec-card-value">{rec.bestHour.hora}:00</p>
+                      <p className="rec-card-hint">
+                        +${fmt(rec.bestHour.ingreso_optimo - rec.bestHour.ingreso_promedio)} sobre el promedio
+                      </p>
+                    </div>
+                  ) : (
+                    <div className="rec-card rec-card--green">
+                      <p className="rec-card-label">Estado del día</p>
+                      <p className="rec-card-value">Ya optimizado</p>
+                      <p className="rec-card-hint">La distribución actual es la óptima para este día</p>
+                    </div>
+                  )}
+                  {rec.bottlenecks.length > 0 && (
+                    <div className="rec-card rec-card--orange">
+                      <p className="rec-card-label">Horas al límite (100%)</p>
+                      <p className="rec-card-value">{rec.bottlenecks.slice(0, 2).map(h => `${h.hora}:00`).join(' · ')}</p>
+                      <p className="rec-card-hint">Considera asignar más personal en esas franjas</p>
+                    </div>
+                  )}
+                </div>
+                {rec.improved.length > 0 && (
+                  <p className="rec-insight">
+                    <strong>Acción concreta:</strong> En la franja de las {rec.improved[0].hora}:00,
+                    el mix sugerido genera{' '}
+                    <strong>${fmt(rec.improved[0].ingreso_optimo - rec.improved[0].ingreso_promedio)}</strong> más que tu distribución habitual.
+                    {rec.topSvc && ` Prioriza ${rec.topSvc.name} — es el servicio con mayor presencia en el plan óptimo.`}
+                  </p>
+                )}
+              </div>
+            );
+          })()}
 
           {/* Barra comparativa */}
           <div className="compare-bar-wrap">
