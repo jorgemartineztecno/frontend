@@ -52,39 +52,34 @@ const computeTiemposKPIs = (tiempos) => {
 };
 
 const computeRecommendations = (opt) => {
-  if (!opt?.horas) return null;
+  if (!opt?.plan) return null;
 
-  const improved = opt.horas
-    .filter(h => h.ingreso_optimo > h.ingreso_promedio + 50)
-    .sort((a, b) => (b.ingreso_optimo - b.ingreso_promedio) - (a.ingreso_optimo - a.ingreso_promedio));
+  // Servicio con mayor ingreso óptimo
+  const topSvc = [...opt.plan].sort((a, b) => b.ingreso_optimo - a.ingreso_optimo)[0] ?? null;
 
-  const svcCount = {};
-  opt.horas.forEach(h => {
-    Object.entries(h.mix_optimo || {}).forEach(([s]) => {
-      svcCount[s] = (svcCount[s] || 0) + 1;
-    });
-  });
-  const topSvcName = Object.entries(svcCount).sort((a, b) => b[1] - a[1])[0]?.[0];
-  const topSvcInfo = opt.servicios?.find(s => s.name === topSvcName);
-  const topSvc = topSvcName ? { name: topSvcName, price: topSvcInfo?.price, hours: svcCount[topSvcName] } : null;
+  // Servicio más eficiente ($/min)
+  const bestEff = [...opt.plan].sort((a, b) => b.eficiencia - a.eficiencia)[0] ?? null;
 
-  const bottlenecks = opt.horas.filter(h => h.capacidad_usada >= 100 && h.ingreso_optimo > 0);
+  // Servicios donde LP recomienda más que el promedio
+  const upgraded = opt.plan.filter(r => r.cantidad_optima > r.cantidad_promedio + 0.1);
 
-  return { improved, topSvc, bestHour: improved[0] ?? null, bottlenecks };
+  return { topSvc, bestEff, upgraded };
 };
 
 const HELP_CONTENT = {
   ingresos: {
-    title: 'Maximización de Ingresos — Programación Lineal',
-    intro: 'El modelo calcula cuántos lavados de cada servicio conviene hacer en cada hora para ganar la mayor cantidad de dinero posible, sin sobrepasar la capacidad del negocio.',
+    title: 'Maximización de Ingresos — Programación Lineal (LP)',
+    intro: 'El modelo resuelve un problema de optimización lineal para todo el día: ¿cuántos lavados de cada tipo hacer para ganar el máximo dinero posible, sin exceder la capacidad de los empleados ni la demanda histórica?',
     columns: [
-      { label: 'HORA', desc: 'Franja horaria del día (7:00 a 18:00).' },
-      { label: 'MIX RECOMENDADO', desc: 'Combinación óptima de servicios que el modelo sugiere realizar en esa hora. El número (×0.3) indica cuántas unidades de ese servicio.' },
-      { label: 'ÓPTIMO', desc: 'Ingreso máximo posible si se sigue el mix recomendado. Es el resultado de la optimización.' },
-      { label: 'PROMEDIO', desc: 'Ingreso esperado sin optimizar, distribuyendo los clientes proporcionalmente según la popularidad histórica de cada servicio.' },
-      { label: 'CAP.', desc: 'Capacidad usada: qué tan aprovechada está la capacidad de los empleados en esa hora. 100% = empleados al máximo. Valores altos son buenos si los ingresos también son altos.' },
+      { label: 'SERVICIO', desc: 'Tipo de lavado ofrecido. Cada uno es una variable de decisión x_i en el modelo.' },
+      { label: 'PRECIO', desc: 'Coeficiente de la función objetivo: maximizar Σ precio_i × x_i.' },
+      { label: 'DURACIÓN', desc: 'Minutos que toma el servicio. Define la restricción de tiempo: Σ duración_i × x_i ≤ capacidad.' },
+      { label: 'CANT. ÓPTIMA', desc: 'Solución del LP: cuántos de este servicio conviene hacer hoy para maximizar ingresos.' },
+      { label: 'CANT. PROMEDIO', desc: 'Lo que se hace normalmente según el historial — sin optimizar.' },
+      { label: 'INGRESO ÓPTIMO', desc: 'Ingresos que genera este servicio si se sigue el plan óptimo del LP.' },
+      { label: 'EFICIENCIA', desc: 'Ingreso por minuto ($/ min). El LP naturalmente prioriza servicios con mayor eficiencia hasta agotar su demanda.' },
     ],
-    note: 'Si ÓPTIMO y PROMEDIO son iguales, significa que la distribución actual ya es óptima para esa hora, o que se necesitan más datos históricos de lavados para diferenciarlas.',
+    note: 'La diferencia entre ÓPTIMO y PROMEDIO muestra cuánto dinero se deja de ganar al no seguir el plan. Más datos históricos = predicción de demanda más precisa = mejor plan.',
   },
   tiempos: {
     title: 'Optimización de Tiempos — M/M/c + SPT',
@@ -228,10 +223,24 @@ const Optimization = () => {
       {/* ── PANEL INGRESOS (LP) ── */}
       {activeTab === 'ingresos' && opt && (
         <div className="result-panel">
+
+          {/* Modelo LP — función objetivo y restricciones */}
+          <div className="lp-model-box">
+            <div className="lp-model-header">
+              <span className="lp-badge">LP</span>
+              <span className="lp-obj">{opt.funcion_objetivo}</span>
+            </div>
+            <ul className="lp-constraints">
+              {opt.restricciones?.map((r, i) => (
+                <li key={i}><span className="lp-ri">R{i + 1}</span>{r}</li>
+              ))}
+            </ul>
+          </div>
+
           {/* KPIs */}
           <div className="kpi-grid">
             <div className="kpi kpi--green">
-              <p className="kpi-label">Ingreso óptimo</p>
+              <p className="kpi-label">Ingreso óptimo del día</p>
               <p className="kpi-value">${fmt(opt.total_optimo)}</p>
             </div>
             <div className="kpi kpi--gray">
@@ -248,6 +257,31 @@ const Optimization = () => {
             </div>
           </div>
 
+          {/* Capacidad de tiempo */}
+          <div className="cap-section">
+            <div className="cap-row">
+              <span className="cap-label">Plan óptimo</span>
+              <div className="cap-bar-wrap">
+                <div className="cap-bar-fill cap-bar--green"
+                  style={{ width: `${Math.min(100, opt.pct_capacidad_optima)}%` }} />
+              </div>
+              <span className="cap-pct cap-pct--green">{opt.pct_capacidad_optima}%</span>
+              <span className="cap-min">{fmt(opt.tiempo_usado_optimo)} / {fmt(opt.capacidad_minutos)} min</span>
+            </div>
+            <div className="cap-row">
+              <span className="cap-label">Sin optimizar</span>
+              <div className="cap-bar-wrap">
+                <div className="cap-bar-fill cap-bar--gray"
+                  style={{ width: `${Math.min(100, opt.pct_capacidad_promedio)}%` }} />
+              </div>
+              <span className="cap-pct cap-pct--gray">{opt.pct_capacidad_promedio}%</span>
+              <span className="cap-min">{fmt(opt.tiempo_usado_promedio)} / {fmt(opt.capacidad_minutos)} min</span>
+            </div>
+            <p className="cap-note">
+              {opt.empleados} empleado{opt.empleados !== 1 ? 's' : ''} × 660 min/día = {fmt(opt.capacidad_minutos)} min disponibles
+            </p>
+          </div>
+
           {/* Recomendaciones */}
           {(() => {
             const rec = computeRecommendations(opt);
@@ -257,103 +291,70 @@ const Optimization = () => {
                 <p className="rec-panel-title">¿Qué hacer hoy?</p>
                 <div className="rec-grid">
                   {rec.topSvc && (
+                    <div className="rec-card rec-card--green">
+                      <p className="rec-card-label">Mayor ingreso óptimo</p>
+                      <p className="rec-card-value">{rec.topSvc.servicio}</p>
+                      <p className="rec-card-hint">${fmt(rec.topSvc.ingreso_optimo)} · {rec.topSvc.cantidad_optima} lavados</p>
+                    </div>
+                  )}
+                  {rec.bestEff && (
                     <div className="rec-card rec-card--blue">
-                      <p className="rec-card-label">Servicio a priorizar</p>
-                      <p className="rec-card-value">{rec.topSvc.name}</p>
-                      <p className="rec-card-hint">
-                        {rec.topSvc.price ? `$${fmt(rec.topSvc.price)} · ` : ''}
-                        recomendado en {rec.topSvc.hours} franja{rec.topSvc.hours !== 1 ? 's' : ''}
-                      </p>
+                      <p className="rec-card-label">Más eficiente ($/min)</p>
+                      <p className="rec-card-value">{rec.bestEff.servicio}</p>
+                      <p className="rec-card-hint">${rec.bestEff.eficiencia}/min · {rec.bestEff.duracion_min} min/lavado</p>
                     </div>
                   )}
-                  {rec.bestHour ? (
-                    <div className="rec-card rec-card--green">
-                      <p className="rec-card-label">Mejor franja horaria</p>
-                      <p className="rec-card-value">{rec.bestHour.hora}:00</p>
-                      <p className="rec-card-hint">
-                        +${fmt(rec.bestHour.ingreso_optimo - rec.bestHour.ingreso_promedio)} sobre el promedio
-                      </p>
-                    </div>
-                  ) : (
-                    <div className="rec-card rec-card--green">
-                      <p className="rec-card-label">Estado del día</p>
-                      <p className="rec-card-value">Ya optimizado</p>
-                      <p className="rec-card-hint">La distribución actual es la óptima para este día</p>
-                    </div>
-                  )}
-                  {rec.bottlenecks.length > 0 && (
+                  {rec.upgraded.length > 0 && (
                     <div className="rec-card rec-card--orange">
-                      <p className="rec-card-label">Horas al límite (100%)</p>
-                      <p className="rec-card-value">{rec.bottlenecks.slice(0, 2).map(h => `${h.hora}:00`).join(' · ')}</p>
-                      <p className="rec-card-hint">Considera asignar más personal en esas franjas</p>
+                      <p className="rec-card-label">Aumentar vs promedio</p>
+                      <p className="rec-card-value">{rec.upgraded[0].servicio}</p>
+                      <p className="rec-card-hint">
+                        {rec.upgraded[0].cantidad_promedio} → {rec.upgraded[0].cantidad_optima} lavados
+                      </p>
                     </div>
                   )}
                 </div>
-                {rec.improved.length > 0 && (
+                {rec.upgraded.length > 0 && (
                   <p className="rec-insight">
-                    <strong>Acción concreta:</strong> En la franja de las {rec.improved[0].hora}:00,
-                    el mix sugerido genera{' '}
-                    <strong>${fmt(rec.improved[0].ingreso_optimo - rec.improved[0].ingreso_promedio)}</strong> más que tu distribución habitual.
-                    {rec.topSvc && ` Prioriza ${rec.topSvc.name} — es el servicio con mayor presencia en el plan óptimo.`}
+                    <strong>Acción concreta:</strong> Haz {Math.round(rec.upgraded[0].cantidad_optima)} {rec.upgraded[0].servicio}
+                    {rec.upgraded.length > 1 && ` y ${Math.round(rec.upgraded[1].cantidad_optima)} ${rec.upgraded[1].servicio}`} hoy.
+                    {rec.bestEff && ` El servicio más rentable por minuto es ${rec.bestEff.servicio} (${rec.bestEff.eficiencia} $/min).`}
                   </p>
                 )}
               </div>
             );
           })()}
 
-          {/* Barra comparativa */}
-          <div className="compare-bar-wrap">
-            <div className="compare-bar-label">
-              <span>Sin optimizar</span>
-              <span>Óptimo</span>
+          {/* Plan diario por servicio */}
+          <h4 className="section-title">Plan óptimo del día — por servicio</h4>
+          <div className="plan-table">
+            <div className="pt-header">
+              <span>Servicio</span>
+              <span>Precio</span>
+              <span>Duración</span>
+              <span>Cant. Óptima</span>
+              <span>Cant. Promedio</span>
+              <span>Ingreso Óptimo</span>
+              <span>Eficiencia</span>
             </div>
-            <div className="compare-bar">
-              <div
-                className="compare-bar-fill"
-                style={{ width: `${Math.min(100, (opt.total_optimo / Math.max(1, opt.total_optimo)) * 100)}%` }}
-              />
-            </div>
-          </div>
-
-          {/* Servicios */}
-          {opt.servicios?.length > 0 && (
-            <div className="svc-section">
-              <h4>Servicios en el modelo</h4>
-              <div className="svc-grid">
-                {opt.servicios.map(s => (
-                  <div key={s.name} className="svc-card">
-                    <p className="svc-card-name">{s.name}</p>
-                    <p className="svc-card-price">${fmt(s.price)}</p>
-                    <div className="svc-pop-bar">
-                      <div className="svc-pop-fill" style={{ width: `${Math.min(100, s.popularity)}%` }} />
-                    </div>
-                    <p className="svc-pop-label">{s.popularity}% demanda</p>
-                  </div>
-                ))}
-              </div>
-            </div>
-          )}
-
-          {/* Mix por hora */}
-          <h4 className="section-title">Mix óptimo por franja horaria</h4>
-          <div className="hour-opt-table">
-            <div className="hot-header">
-              <span>Hora</span><span>Mix recomendado</span>
-              <span>Óptimo</span><span>Promedio</span><span>Cap.</span>
-            </div>
-            {opt.horas?.map(h => (
-              <div key={h.hora} className="hot-row">
-                <span className="hot-hora">{h.hora}:00</span>
-                <span className="hot-mix">
-                  {Object.entries(h.mix_optimo || {}).map(([s, q]) => (
-                    <span key={s} className="mix-chip">{s} ×{q}</span>
-                  ))}
-                </span>
-                <span className="hot-opt">${fmt(h.ingreso_optimo)}</span>
-                <span className="hot-avg">${fmt(h.ingreso_promedio)}</span>
-                <span className="hot-cap">{h.capacidad_usada}%</span>
-              </div>
-            ))}
+            {opt.plan?.map(row => {
+              const diff = row.cantidad_optima - row.cantidad_promedio;
+              return (
+                <div key={row.servicio} className={`pt-row${diff > 0.1 ? ' pt-row--up' : diff < -0.1 ? ' pt-row--down' : ''}`}>
+                  <span className="pt-svc">{row.servicio}</span>
+                  <span className="pt-price">${fmt(row.precio)}</span>
+                  <span className="pt-dur">{row.duracion_min} min</span>
+                  <span className="pt-opt">
+                    {Math.round(row.cantidad_optima)}
+                    {diff > 0.1 && <span className="pt-arrow pt-arrow--up"> ↑</span>}
+                    {diff < -0.1 && <span className="pt-arrow pt-arrow--down"> ↓</span>}
+                  </span>
+                  <span className="pt-avg">{Math.round(row.cantidad_promedio)}</span>
+                  <span className="pt-rev">${fmt(row.ingreso_optimo)}</span>
+                  <span className="pt-eff">${row.eficiencia}/min</span>
+                </div>
+              );
+            })}
           </div>
         </div>
       )}

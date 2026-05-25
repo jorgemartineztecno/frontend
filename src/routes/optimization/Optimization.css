@@ -287,6 +287,140 @@
   margin: 1.6rem 0 0.8rem;
 }
 
+/* ── LP model box ── */
+.lp-model-box {
+  background: #f0f4ff;
+  border: 1.5px solid #c7d7fa;
+  border-radius: 12px;
+  padding: 1rem 1.3rem;
+  margin-bottom: 1.4rem;
+}
+.lp-model-header {
+  display: flex;
+  align-items: center;
+  gap: 0.7rem;
+  margin-bottom: 0.7rem;
+}
+.lp-badge {
+  background: #4361ee;
+  color: #fff;
+  font-size: 0.7rem;
+  font-weight: 800;
+  padding: 2px 8px;
+  border-radius: 6px;
+  letter-spacing: 0.5px;
+  flex-shrink: 0;
+}
+.lp-obj {
+  font-size: 0.9rem;
+  font-weight: 700;
+  color: #3730a3;
+  font-family: 'Courier New', monospace;
+  margin: 0;
+}
+.lp-constraints {
+  list-style: none;
+  padding: 0; margin: 0;
+  display: flex;
+  flex-direction: column;
+  gap: 4px;
+}
+.lp-constraints li {
+  font-size: 0.82rem;
+  color: #475569;
+  display: flex;
+  gap: 0.5rem;
+  align-items: baseline;
+}
+.lp-ri {
+  background: #e0e7ff;
+  color: #4361ee;
+  font-size: 0.68rem;
+  font-weight: 700;
+  padding: 1px 6px;
+  border-radius: 4px;
+  flex-shrink: 0;
+}
+
+/* ── Capacity bars ── */
+.cap-section {
+  background: #f8fafc;
+  border-radius: 12px;
+  padding: 1rem 1.3rem;
+  margin-bottom: 1.4rem;
+  display: flex;
+  flex-direction: column;
+  gap: 0.7rem;
+}
+.cap-row {
+  display: grid;
+  grid-template-columns: 90px 1fr 56px 130px;
+  align-items: center;
+  gap: 0.75rem;
+}
+.cap-label {
+  font-size: 0.78rem;
+  font-weight: 600;
+  color: #64748b;
+  white-space: nowrap;
+}
+.cap-bar-wrap {
+  height: 10px;
+  background: #e2e8f0;
+  border-radius: 99px;
+  overflow: hidden;
+}
+.cap-bar-fill {
+  height: 100%;
+  border-radius: 99px;
+  transition: width 0.7s ease-out;
+}
+.cap-bar--green { background: linear-gradient(90deg, #43a047, #66bb6a); }
+.cap-bar--gray  { background: #94a3b8; }
+.cap-pct { font-size: 0.82rem; font-weight: 700; text-align: right; }
+.cap-pct--green { color: #43a047; }
+.cap-pct--gray  { color: #64748b; }
+.cap-min { font-size: 0.74rem; color: #94a3b8; white-space: nowrap; }
+.cap-note {
+  font-size: 0.75rem;
+  color: #94a3b8;
+  margin: 0;
+  padding-top: 0.3rem;
+  border-top: 1px solid #e2e8f0;
+}
+
+/* ── Plan table (per-service LP result) ── */
+.plan-table { font-size: 0.83rem; }
+.pt-header, .pt-row {
+  display: grid;
+  grid-template-columns: 1.8fr 0.8fr 0.7fr 0.9fr 0.9fr 1fr 0.8fr;
+  padding: 0.55rem 0.5rem;
+  gap: 0.4rem;
+  align-items: center;
+  border-bottom: 1px solid #f1f5f9;
+}
+.pt-header {
+  font-size: 0.7rem;
+  font-weight: 700;
+  color: #64748b;
+  text-transform: uppercase;
+  letter-spacing: 0.4px;
+  border-bottom: 2px solid #e2e8f0;
+}
+.pt-row:hover { background: #f8fafc; }
+.pt-row--up   { background: #f0fdf4; }
+.pt-row--down { background: #fff5f5; }
+.pt-svc   { font-weight: 700; color: #334155; }
+.pt-price { color: #43a047; font-weight: 600; }
+.pt-dur   { color: #64748b; }
+.pt-opt   { color: #4361ee; font-weight: 800; font-size: 0.9rem; }
+.pt-avg   { color: #94a3b8; }
+.pt-rev   { color: #43a047; font-weight: 700; }
+.pt-eff   { color: #fb8c00; font-weight: 600; font-size: 0.78rem; }
+.pt-arrow { font-size: 0.8rem; font-weight: 800; }
+.pt-arrow--up   { color: #43a047; }
+.pt-arrow--down { color: #e53935; }
+
 /* ── Hour optimization table ── */
 .hour-opt-table { font-size: 0.83rem; }
 .hot-header, .hot-row {
